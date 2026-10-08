@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12292c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>تسجيل الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#12292c;--muted:#5d7276;--paper:#eef2f0;--line:#cfd9d6;--teal:#0d7377;--teal-d:#095457;--amber:#e8a33d;--red:#c1432e;--green:#1f8a4c}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--paper);color:var(--ink);font-family:"Tajawal",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;font-size:16px;line-height:1.7;padding-bottom:env(safe-area-inset-bottom,0)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.band{background:var(--ink);color:#fff;padding:calc(26px + env(safe-area-inset-top,0px)) 20px 70px;text-align:center}
+.band h1{margin:0;font-size:30px;font-weight:800;overflow-wrap:anywhere}
+.band p{margin:4px 0 0;color:#a9c4c3}
+.card{max-width:520px;margin:-46px auto 30px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 20px 24px}
+label{display:block;font-weight:700;margin:14px 0 5px}
+label:first-of-type{margin-top:0}
+input[type=text],input[type=password]{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fbfcfc;min-height:48px}
+.pw{position:relative}
+.pw button{position:absolute;left:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--teal-d);font-weight:700;padding:8px;cursor:pointer}
+.pw input{padding-left:64px}
+.err{color:var(--red);font-weight:700;font-size:14.5px;margin:4px 0 0}
+.note{margin:18px 0 0;padding:10px 12px;background:#eaf3f2;border-radius:8px;font-size:14.5px;color:var(--teal-d)}
+#send{width:100%;margin-top:18px;min-height:54px;border:0;border-radius:10px;background:var(--teal);color:#fff;font-size:19px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+#send:hover{background:var(--teal-d)}
+#send[disabled]{background:#8aa6a5;cursor:default}
+#send svg{width:22px;height:22px;transform:scaleX(-1)}
+.banner{max-width:520px;margin:14px auto 0;padding:10px 14px;background:#fff6e3;border:1px solid var(--amber);border-radius:8px;font-size:15px;font-weight:700}
+.banner.bad{background:#fbe3de;border-color:var(--red);color:#7e2514}
+.status{margin-top:14px;font-weight:700;text-align:center}
+.status.err{color:var(--red)} .status.ok{color:var(--green)}
+.done{text-align:center;padding:10px 0}
+.done .tick{width:78px;height:78px;border-radius:50%;background:var(--green);margin:0 auto 12px;display:grid;place-items:center}
+.done .tick svg{width:40px;height:40px}
+.done h2{margin:0 0 6px}
+.done p{margin:0 0 16px;color:var(--muted)}
+.btn2{border:1px solid var(--teal);background:#fff;color:var(--teal-d);padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer}
+.hidden{display:none!important}
+@media (prefers-reduced-motion:no-preference){.done .tick{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}}
+</style>
+</head>
+<body>
+
+<div class="band">
+  <h1 id="title">تسجيل الحضور</h1>
+  <p id="sub">جارٍ تحميل بيانات المحاضرة...</p>
+</div>
+
+<div class="banner hidden" id="banner"></div>
+
+<main class="card">
+  <form id="form" novalidate autocomplete="off">
+    <label for="name">اسم الطالب</label>
+    <input type="text" id="name" required autocomplete="name">
+    <p class="err" id="eName"></p>
+
+    <label for="grade">الفرقة الدراسية</label>
+    <input type="text" id="grade" required list="grades" placeholder="مثال: الفرقة الثانية">
+    <datalist id="grades">
+      <option value="الفرقة الأولى"><option value="الفرقة الثانية"><option value="الفرقة الثالثة"><option value="الفرقة الرابعة"><option value="الفرقة الخامسة">
+    </datalist>
+    <p class="err" id="eGrade"></p>
+
+    <label for="dept">القسم</label>
+    <input type="text" id="dept" required>
+    <p class="err" id="eDept"></p>
+
+    <label for="pass">الباسورد</label>
+    <div class="pw">
+      <input type="password" id="pass" required autocomplete="off">
+      <button type="button" id="eye">إظهار</button>
+    </div>
+    <p class="err" id="ePass"></p>
+
+    <div class="note">سيتم تحديد موقعك الجغرافي تلقائيًا عند الإرسال. اسمح للمتصفح بالوصول إلى الموقع عند ظهور الطلب.</div>
+
+    <button type="submit" id="send" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      <span id="sendTxt">إرسال البيانات</span>
+    </button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </form>
+
+  <div class="done hidden" id="done">
+    <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2 id="doneH">تم إرسال البيانات</h2>
+    <p id="doneTxt"></p>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+const URL_ = (window.APP_CONFIG && window.APP_CONFIG.SCRIPT_URL) || "";
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const showDate = s => { const p=String(s).split('/'); return p.length===3 ? (+p[0])+' '+months[(+p[1])-1]+' '+p[2] : s; };
+const status=(t,c)=>{ const s=$('#status'); s.textContent=t||''; s.className='status '+(c||''); };
+const banner=(t,bad)=>{ const b=$('#banner'); if(!t){b.classList.add('hidden');return;} b.textContent=t; b.className='banner'+(bad?' bad':''); };
+
+let session={title:'',date:''}, canSend=false;
+
+/* ---- بيانات المحاضرة (الاسم والتاريخ يحددهما المالك) ---- */
+async function loadConfig(){
+  if(!URL_){ $('#sub').textContent=''; banner('لم يتم ربط الصفحة بالخادم بعد. ضع رابط Apps Script في ملف config.js.',true); return; }
+  try{
+    const r=await fetch(URL_+'?action=config'); const c=await r.json();
+    if(!c.active){ $('#sub').textContent='لا توجد محاضرة حاليًا'; banner('لم يبدأ المعلم تسجيل الحضور بعد. حاول لاحقًا.',true); return; }
+    session={title:c.title,date:c.date};
+    $('#title').textContent=c.title; document.title=c.title+' - '+showDate(c.date);
+    $('#sub').textContent=showDate(c.date);
+    if(!c.open){ banner('تم إغلاق التسجيل لهذه المحاضرة.',true); return; }
+    canSend=true; $('#send').disabled=false;
+  }catch(e){
+    $('#sub').textContent='';
+    banner('تعذّر تحميل بيانات المحاضرة. تأكد من الإنترنت ثم أعد فتح الصفحة.',true);
+  }
+}
+loadConfig();
+
+/* ---- تذكّر الاسم والفرقة والقسم (دون الباسورد) ---- */
+const KEY='att-profile';
+try{ const p=JSON.parse(localStorage.getItem(KEY)||'{}'); $('#name').value=p.name||''; $('#grade').value=p.grade||''; $('#dept').value=p.dept||''; }catch(e){}
+
+$('#eye').onclick=()=>{ const i=$('#pass'),h=i.type==='password'; i.type=h?'text':'password'; $('#eye').textContent=h?'إخفاء':'إظهار'; };
+const clearErr=()=>document.querySelectorAll('.err').forEach(e=>e.textContent='');
+
+function getPosition(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej({code:0});
+    navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  });
+}
+
+/* إرسال مع إعادة محاولة تلقائية عند ازدحام الخادم (مهم عند دخول مئات الطلاب معًا) */
+async function post(data){
+  const waits=[0,2000,4000,7000,10000,14000,20000];
+  for(let i=0;i<waits.length;i++){
+    if(waits[i]){ status('الخادم مزدحم، جارٍ إعادة المحاولة تلقائيًا...'); await sleep(waits[i]+Math.random()*3000); }
+    try{
+      const res=await fetch(URL_,{method:'POST',body:JSON.stringify(data)});
+      const j=await res.json();
+      if(j.ok || j.error!=='busy') return j;
+    }catch(e){ /* انقطاع مؤقت: نعيد المحاولة (الخادم يمنع التكرار) */ }
+  }
+  throw new Error('تعذّر الإرسال بسبب الازدحام أو ضعف الاتصال. أعد المحاولة بعد لحظات.');
+}
+
+const ERR={closed:'تم إغلاق التسجيل لهذه المحاضرة.','no-session':'لا توجد محاضرة مفتوحة حاليًا.',missing:'أكمل جميع الحقول.',location:'تعذّر قراءة الموقع، أعد المحاولة.'};
+
+$('#form').addEventListener('submit',async ev=>{
+  ev.preventDefault(); clearErr(); status('');
+  const name=$('#name').value.trim(), grade=$('#grade').value.trim(), dept=$('#dept').value.trim(), pass=$('#pass').value;
+  let bad=false;
+  if(!name){ $('#eName').textContent='اكتب اسم الطالب'; bad=true; }
+  if(!grade){ $('#eGrade').textContent='اكتب الفرقة الدراسية'; bad=true; }
+  if(!dept){ $('#eDept').textContent='اكتب القسم'; bad=true; }
+  if(!pass){ $('#ePass').textContent='اكتب الباسورد'; bad=true; }
+  if(bad||!canSend) return;
+
+  const btn=$('#send'); btn.disabled=true; $('#sendTxt').textContent='جارٍ الإرسال...';
+  try{
+    status('جارٍ تحديد موقعك...');
+    let pos;
+    try{ pos=await getPosition(); }
+    catch(e){
+      const m={1:'لم تسمح بالوصول إلى الموقع. فعّل إذن الموقع للمتصفح ثم أعد المحاولة.',2:'تعذّر تحديد موقعك. شغّل GPS وأعد المحاولة.',3:'انتهت مهلة تحديد الموقع. أعد المحاولة.',0:'هذا المتصفح لا يدعم تحديد الموقع.'};
+      throw new Error(window.isSecureContext?(m[e.code]||'تعذّر تحديد الموقع.'):'تحديد الموقع يتطلب فتح الصفحة عبر رابط https.');
+    }
+    status('جارٍ إرسال البيانات...');
+    const j=await post({
+      name,grade,dept,password:pass,
+      lat:+pos.coords.latitude.toFixed(6), lng:+pos.coords.longitude.toFixed(6), acc:Math.round(pos.coords.accuracy)
+    });
+    if(!j.ok){
+      if(j.error==='password'){ $('#ePass').textContent='الباسورد غير صحيح'; status(''); return; }
+      throw new Error(ERR[j.error]||('رفض الخادم الطلب: '+j.error));
+    }
+    try{ localStorage.setItem(KEY,JSON.stringify({name,grade,dept})); }catch(e){}
+    $('#form').classList.add('hidden'); $('#done').classList.remove('hidden');
+    $('#doneH').textContent=j.duplicate?'تم تسجيل حضورك مسبقًا':'تم إرسال البيانات';
+    $('#doneTxt').textContent=name+' - '+session.title+' - '+showDate(session.date);
+  }catch(err){
+    status(err.message,'err');
+  }finally{
+    btn.disabled=!canSend; $('#sendTxt').textContent='إرسال البيانات';
+  }
+});
+
+/* ---- تفعيل التثبيت كتطبيق (PWA) ---- */
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+})();
+</script>
+</body>
+</html>

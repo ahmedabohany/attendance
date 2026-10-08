@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#12292c">
+<title>لوحة المالك - الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#12292c;--muted:#5d7276;--paper:#eef2f0;--line:#cfd9d6;--teal:#0d7377;--teal-d:#095457;--amber:#e8a33d;--red:#c1432e;--green:#1f8a4c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Tajawal",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;font-size:16px;line-height:1.7}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 50px}
+h1{margin:0 0 14px;font-size:26px;font-weight:800}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+.card h2{margin:0 0 10px;font-size:18px}
+label{display:block;font-weight:700;margin:12px 0 4px;font-size:15px}
+input[type=text],input[type=password],input[type=number],input[type=email],select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fbfcfc;min-height:46px}
+.date{display:grid;grid-template-columns:1fr 1.6fr 1.2fr;gap:8px}
+.hint{color:var(--muted);font-size:14px;margin:3px 0 0}
+.btn{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;min-height:46px}
+.btn:hover{background:var(--teal-d)}
+.btn[disabled]{background:#8aa6a5;cursor:default}
+.btn.alt{background:#fff;color:var(--teal-d);border:1px solid var(--teal)}
+.btn.alt:hover{background:#e6f2f1}
+.btn.danger{background:var(--red)}
+.btn.block{width:100%;margin-top:16px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btns .btn{flex:1 1 140px}
+.cur h3{margin:0;font-size:22px;overflow-wrap:anywhere}
+.cur .d{color:var(--muted);margin:0 0 10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-block;padding:3px 12px;border-radius:99px;font-size:14px;font-weight:700}
+.badge.on{background:#dff3e7;color:#146a39}
+.badge.off{background:#fbe3de;color:#9b3220}
+.count{font-size:34px;font-weight:800;line-height:1}
+.count small{font-size:15px;font-weight:500;color:var(--muted);margin-right:6px}
+.link{display:flex;gap:8px;margin-top:8px}
+.link input{direction:ltr;font-size:13px}
+.msg{margin-top:12px;font-weight:700}
+.msg.ok{color:var(--green)} .msg.err{color:var(--red)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>لوحة المالك</h1>
+
+  <!-- تسجيل الدخول -->
+  <section class="card" id="login">
+    <label for="ap">باسورد المالك</label>
+    <input type="password" id="ap" autocomplete="current-password">
+    <button class="btn block" id="loginBtn" type="button">دخول</button>
+    <div class="msg" id="loginMsg"></div>
+  </section>
+
+  <div id="panel" class="hidden">
+
+    <section class="card cur">
+      <h2>المحاضرة الحالية</h2>
+      <div id="noSess" class="hint">لا توجد محاضرة بعد. ابدأ محاضرة جديدة من النموذج بالأسفل.</div>
+      <div id="sess" class="hidden">
+        <h3 id="cTitle"></h3>
+        <p class="d" id="cDate"></p>
+        <div class="chips">
+          <span class="badge" id="cState"></span>
+          <span class="count"><span id="cCount">0</span><small>طالب مسجّل</small></span>
+        </div>
+        <p class="hint" id="cAuto"></p>
+        <div class="btns">
+          <button class="btn danger" id="bClose" type="button">إغلاق التسجيل وإرسال Excel</button>
+          <button class="btn alt" id="bSend" type="button">إرسال Excel الآن</button>
+          <button class="btn alt" id="bOpen" type="button">إعادة فتح التسجيل</button>
+        </div>
+        <label>رابط الطلاب</label>
+        <div class="link">
+          <input type="text" id="lnk" readonly>
+          <button class="btn alt" id="bCopy" type="button">نسخ</button>
+        </div>
+      </div>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>بدء محاضرة جديدة</h2>
+      <label for="title">اسم المحاضرة</label>
+      <input type="text" id="title" placeholder="مثال: أنظمة التشغيل - المحاضرة 5">
+      <label>تاريخ المحاضرة</label>
+      <div class="date">
+        <select id="d" aria-label="اليوم"></select>
+        <select id="m" aria-label="الشهر"></select>
+        <select id="y" aria-label="السنة"></select>
+      </div>
+      <label for="mins">إغلاق التسجيل تلقائيًا بعد (بالدقائق)</label>
+      <input type="number" id="mins" min="0" placeholder="اتركه فارغًا ليبقى مفتوحًا حتى تغلقه أنت">
+      <p class="hint">عند الإغلاق التلقائي يصلك ملف Excel على الإيميل دون أن تفعل شيئًا.</p>
+      <label for="spw">باسورد الطلاب</label>
+      <input type="text" id="spw" placeholder="اتركه فارغًا للإبقاء على الباسورد الحالي">
+      <label for="em">الإيميل الذي يصله الملف</label>
+      <input type="email" id="em" dir="ltr">
+      <button class="btn block" id="start" type="button">بدء المحاضرة</button>
+      <p class="hint">بدء محاضرة جديدة يغلق السابقة، ويُنشئ لها ورقة مستقلة في الشيت وملف Excel مستقلًا.</p>
+    </section>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+const URL_=(window.APP_CONFIG&&window.APP_CONFIG.SCRIPT_URL)||"";
+const $=s=>document.querySelector(s);
+const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const showDate=s=>{const p=String(s).split('/');return p.length===3?(+p[0])+' '+months[(+p[1])-1]+' '+p[2]:s;};
+const msg=(t,c)=>{const m=$('#msg');m.textContent=t||'';m.className='msg '+(c||'');};
+let pw=sessionStorage.getItem('adm')||'', timer=null;
+
+/* التاريخ: يوم / شهر / سنة، مضبوط على اليوم افتراضيًا ويمكنك تغييره */
+const now=new Date();
+const fill=(sel,items,val)=>{sel.innerHTML=items.map(([v,t])=>`<option value="${v}"${v===val?' selected':''}>${t}</option>`).join('');};
+fill($('#d'),Array.from({length:31},(_,i)=>[i+1,i+1]),now.getDate());
+fill($('#m'),months.map((t,i)=>[i+1,t]),now.getMonth()+1);
+fill($('#y'),[now.getFullYear()-1,now.getFullYear(),now.getFullYear()+1].map(v=>[v,v]),now.getFullYear());
+
+async function api(op,extra){
+  if(!URL_) throw new Error('لم يتم ضبط SCRIPT_URL في ملف config.js');
+  let res;
+  try{ res=await fetch(URL_,{method:'POST',body:JSON.stringify(Object.assign({action:'admin',adminPassword:pw,op:op},extra||{}))}); }
+  catch(e){ throw new Error('تعذّر الاتصال بالخادم'); }
+  const j=await res.json();
+  if(!j.ok) throw new Error(j.error==='admin-password'?'باسورد المالك غير صحيح':(j.error||'حدث خطأ'));
+  return j;
+}
+
+function render(st){
+  const s=st.session;
+  $('#em').value=$('#em').value||st.email||'';
+  $('#noSess').classList.toggle('hidden',!!s);
+  $('#sess').classList.toggle('hidden',!s);
+  if(!s) return;
+  $('#cTitle').textContent=s.title;
+  $('#cDate').textContent=showDate(s.date);
+  $('#cCount').textContent=st.count;
+  const b=$('#cState'); b.textContent=s.open?'التسجيل مفتوح':'التسجيل مغلق'; b.className='badge '+(s.open?'on':'off');
+  $('#cAuto').textContent=(s.open&&s.closeAt)?'يُغلق تلقائيًا الساعة '+new Date(s.closeAt).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}):'';
+  $('#bClose').classList.toggle('hidden',!s.open);
+  $('#bOpen').classList.toggle('hidden',!!s.open);
+  $('#lnk').value=new URL('index.html',location.href).href;
+}
+
+async function refresh(){ try{ render(await api('status')); }catch(e){ msg(e.message,'err'); } }
+
+async function enter(){
+  $('#loginMsg').textContent='';
+  try{
+    const st=await api('status');
+    sessionStorage.setItem('adm',pw);
+    $('#login').classList.add('hidden'); $('#panel').classList.remove('hidden');
+    render(st);
+    clearInterval(timer); timer=setInterval(()=>{ if(!document.hidden) refresh(); },15000);
+  }catch(e){ $('#loginMsg').className='msg err'; $('#loginMsg').textContent=e.message; pw=''; sessionStorage.removeItem('adm'); }
+}
+$('#loginBtn').onclick=()=>{ pw=$('#ap').value; enter(); };
+$('#ap').addEventListener('keydown',e=>{ if(e.key==='Enter'){ pw=$('#ap').value; enter(); } });
+if(pw) enter();
+
+async function act(btn,label,fn){
+  const old=btn.textContent; btn.disabled=true; btn.textContent=label; msg('');
+  try{ await fn(); }catch(e){ msg(e.message,'err'); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+$('#start').onclick=()=>act($('#start'),'جارٍ البدء...',async()=>{
+  const dd=+$('#d').value, mm=+$('#m').value, yy=+$('#y').value;
+  const chk=new Date(yy,mm-1,dd);
+  if(chk.getDate()!==dd||chk.getMonth()!==mm-1) throw new Error('هذا التاريخ غير صحيح');
+  const title=$('#title').value.trim();
+  if(!title) throw new Error('اكتب اسم المحاضرة');
+  const st=await api('start',{
+    title,date:String(dd).padStart(2,'0')+'/'+String(mm).padStart(2,'0')+'/'+yy,
+    minutes:Number($('#mins').value)||0, studentPassword:$('#spw').value.trim(), email:$('#em').value.trim()
+  });
+  render(st); $('#title').value=''; $('#spw').value='';
+  msg('بدأت المحاضرة. انسخ رابط الطلاب وأرسله لهم.','ok');
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+$('#bClose').onclick=()=>act($('#bClose'),'جارٍ الإغلاق والإرسال...',async()=>{
+  const st=await api('close',{send:true}); render(st); msg('تم إغلاق التسجيل وإرسال ملف Excel ('+st.sent+' طالب) إلى الإيميل.','ok');
+});
+$('#bSend').onclick=()=>act($('#bSend'),'جارٍ الإرسال...',async()=>{
+  const st=await api('send'); render(st); msg('تم إرسال ملف Excel ('+st.sent+' طالب) إلى الإيميل.','ok');
+});
+$('#bOpen').onclick=()=>act($('#bOpen'),'...',async()=>{ render(await api('open')); msg('تمت إعادة فتح التسجيل.','ok'); });
+$('#bCopy').onclick=()=>{
+  const v=$('#lnk').value;
+  (navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(v):Promise.reject()).catch(()=>{$('#lnk').select();document.execCommand('copy');}).finally(()=>{ $('#bCopy').textContent='تم'; setTimeout(()=>$('#bCopy').textContent='نسخ',1200); });
+};
+})();
+</script>
+</body>
+</html>
