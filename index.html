@@ -78,7 +78,7 @@ input[type=text],input[type=password]{width:100%;padding:12px;border:1px solid v
     </div>
     <p class="err" id="ePass"></p>
 
-    <div class="note">سيتم تحديد موقعك الجغرافي تلقائيًا عند الإرسال. اسمح للمتصفح بالوصول إلى الموقع عند ظهور الطلب.</div>
+    <div class="note">سيتم تحديد موقعك الجغرافي تلقائيًا عند الإرسال. اسمح للمتصفح بالوصول إلى الموقع عند ظهور الطلب. يُسمح بتسجيل واحد فقط من كل جهاز في المحاضرة الواحدة.</div>
 
     <button type="submit" id="send" disabled>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
@@ -154,7 +154,29 @@ async function post(data){
   throw new Error('تعذّر الإرسال بسبب الازدحام أو ضعف الاتصال. أعد المحاولة بعد لحظات.');
 }
 
-const ERR={closed:'تم إغلاق التسجيل لهذه المحاضرة.','no-session':'لا توجد محاضرة مفتوحة حاليًا.',missing:'أكمل جميع الحقول.',location:'تعذّر قراءة الموقع، أعد المحاولة.'};
+/* ---- معرّف الجهاز: يُحفظ في أكثر من مكان حتى لا يضيع بسهولة ---- */
+function genId(){
+  try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  const a=new Uint8Array(16); crypto.getRandomValues(a);
+  return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
+}
+const okId=v=>/^[A-Za-z0-9-]{16,64}$/.test(v||'');
+function cookieGet(k){ const m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)')); return m?decodeURIComponent(m[1]):''; }
+function cookieSet(k,v){ try{ document.cookie=k+'='+encodeURIComponent(v)+'; max-age=315360000; path=/; SameSite=Lax'+(location.protocol==='https:'?'; Secure':''); }catch(e){} }
+function idb(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open('att-db',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); }
+async function idbGet(){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction('kv').objectStore('kv').get('id'); q.onsuccess=()=>res(q.result||''); q.onerror=()=>res(''); }); }catch(e){ return ''; } }
+async function idbSet(v){ try{ const db=await idb(); await new Promise(res=>{ const t=db.transaction('kv','readwrite'); t.objectStore('kv').put(v,'id'); t.oncomplete=()=>res(); t.onerror=()=>res(); }); }catch(e){} }
+async function deviceId(){
+  let id=''; try{ id=localStorage.getItem('att-device')||''; }catch(e){}
+  if(!okId(id)) id=cookieGet('att_device');
+  if(!okId(id)) id=await idbGet();
+  if(!okId(id)) id=genId();
+  try{ localStorage.setItem('att-device',id); }catch(e){}
+  cookieSet('att_device',id); await idbSet(id);
+  return id;
+}
+
+const ERR={'device-used':'تم تسجيل حضور من هذا الجهاز في هذه المحاضرة بالفعل، ولا يُسمح بأكثر من تسجيل واحد لكل جهاز.','no-device':'تعذّر التعرف على الجهاز. حدّث الصفحة وأعد المحاولة.',closed:'تم إغلاق التسجيل لهذه المحاضرة.','no-session':'لا توجد محاضرة مفتوحة حاليًا.',missing:'أكمل جميع الحقول.',location:'تعذّر قراءة الموقع، أعد المحاولة.'};
 
 $('#form').addEventListener('submit',async ev=>{
   ev.preventDefault(); clearErr(); status('');
@@ -176,8 +198,9 @@ $('#form').addEventListener('submit',async ev=>{
       throw new Error(window.isSecureContext?(m[e.code]||'تعذّر تحديد الموقع.'):'تحديد الموقع يتطلب فتح الصفحة عبر رابط https.');
     }
     status('جارٍ إرسال البيانات...');
+    const device=await deviceId();
     const j=await post({
-      name,grade,dept,password:pass,
+      name,grade,dept,password:pass,device,
       lat:+pos.coords.latitude.toFixed(6), lng:+pos.coords.longitude.toFixed(6), acc:Math.round(pos.coords.accuracy)
     });
     if(!j.ok){
